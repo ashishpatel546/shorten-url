@@ -18,7 +18,7 @@ export class ShortenUrlService {
   constructor(
     // @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
     @Inject('REDIS_CLIENT') private readonly redis: Redis,
-    private readonly config: GlobalConfigService
+    private readonly config: GlobalConfigService,
   ) {}
 
   async generateTinyUrl(originalUrl: string) {
@@ -26,13 +26,19 @@ export class ShortenUrlService {
       this.logger.error('No original url found to get tiny url');
       throw new InternalServerErrorException('Something Went wrong!');
     }
-    // You can use a more sophisticated encoding algorithm here
+    // We can use a more sophisticated encoding algorithm here but for now its fine
     try {
       const uid = new ShortUniqueId({ length: 10 });
       const tinyString = uid.rnd();
-      const tinyUrl = `${this.config.env.BASE_TINY_URL}/${tinyString}`;
-      const redisResponse = await this.redis.set(tinyString, originalUrl);
-      await this.redis.expire(tinyString, this.config.env.REDIS_TTL)
+      const tinyUrl = `${this.config.env.BASE_URL}/${tinyString}`;
+
+      //create redis key with some pattern
+      const redisKey = this.generateKey(tinyString);
+
+      //set the key and value to redis
+      await this.redis.set(redisKey, originalUrl);
+      //set expiry time for the key
+      await this.redis.expire(redisKey, this.config.env.REDIS_TTL);
       return tinyUrl;
     } catch (error) {
       this.logger.error(error.message);
@@ -41,13 +47,14 @@ export class ShortenUrlService {
     }
   }
 
-  async getOriginalUrl(tinyUrl: string) {
-    if (!tinyUrl) {
+  async getOriginalUrl(tinyUrlKey: string) {
+    if (!tinyUrlKey) {
       this.logger.error('No tiny url found');
       throw new BadRequestException('Invalid URL');
     }
     try {
-      const cachedUrl: string = await this.redis.get(tinyUrl);
+      const redisKey = this.generateKey(tinyUrlKey);
+      const cachedUrl: string = await this.redis.get(redisKey);
       if (!cachedUrl) {
         this.logger.error('No original URL found against tiny URL');
         throw new BadRequestException('Invalid or expired URL');
@@ -58,5 +65,10 @@ export class ShortenUrlService {
       this.logger.error('Unable to get original url from tiny url');
       throw new BadRequestException('Invalid or expired URL');
     }
+  }
+
+  generateKey(tinyurl: string) {
+    if (!tinyurl) throw new BadRequestException('tiny url can not be empty');
+    return `${this.config.env.SHORTEN_URL_KEY_PATTERN}${tinyurl}`;
   }
 }

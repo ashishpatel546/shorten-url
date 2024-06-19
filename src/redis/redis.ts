@@ -9,7 +9,7 @@ export const RedisProvider: Provider = {
     return new Redis({
       host: config.env.REDIS_HOST,
       port: config.env.REDIS_PORT,
-      db: 0,
+      db: config.env.REDIS_DB_INDEX,
     }); // Instantiate the Redis client with default options
   },
 };

@@ -1,7 +1,7 @@
-import { Controller, Get, Param, Res } from '@nestjs/common';
+import { Controller, Get, Param, Req, Res } from '@nestjs/common';
 import { AppService } from './app.service';
 import { ApiTags } from '@nestjs/swagger';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { ShortenUrlService } from './shorten-url/shorten-url.service';
 
 @ApiTags('BASE URL')
@@ -15,12 +15,6 @@ export class AppController {
   @Get('/health-check')
   getHello(): string {
     return this.appService.hello();
-  }
-
-  @Get('/:tinyurl')
-  async resolveTinyUrl(@Res() res: Response, @Param('tinyurl') tinyurl: string){
-    const originalUrl = await this.shortenService.getOriginalUrl(tinyurl)
-    res.redirect(originalUrl)
   }
 
   

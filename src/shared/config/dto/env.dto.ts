@@ -29,9 +29,9 @@ export class EnvironmentVariables {
   @Transform(({ value }) => Number(value))
   SERVICE_PORT: number;
 
-  @IsString()
-  @IsNotEmpty()
-  API_VERSION: string;
+  // @IsString()
+  // @IsNotEmpty()
+  // API_VERSION: string;
 
   @IsBoolean()
   @IsNotEmpty()
@@ -55,10 +55,19 @@ export class EnvironmentVariables {
   @IsNumber()
   @IsNotEmpty()
   @Transform(({ value }) => Number(value))
+  REDIS_DB_INDEX: number;
+
+  @IsNumber()
+  @IsNotEmpty()
+  @Transform(({ value }) => Number(value))
   REDIS_TTL: number;
 
   @IsString()
   @IsNotEmpty()
-  BASE_TINY_URL: string
+  BASE_URL: string
+
+  @IsString()
+  @IsNotEmpty()
+  SHORTEN_URL_KEY_PATTERN: string
 
 }
