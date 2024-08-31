@@ -5,13 +5,14 @@ import {
   Injectable,
   InternalServerErrorException,
   Logger,
+  Scope,
 } from '@nestjs/common';
 // import { Cache } from 'cache-manager';
 import ShortUniqueId from 'short-unique-id';
 import Redis from 'ioredis';
 import { GlobalConfigService } from 'src/shared/config/globalConfig.service';
 
-@Injectable()
+@Injectable({ scope: Scope.REQUEST })
 export class ShortenUrlService {
   private logger = new Logger(ShortenUrlService.name);
 
@@ -21,7 +22,7 @@ export class ShortenUrlService {
     private readonly config: GlobalConfigService,
   ) {}
 
-  async generateTinyUrl(originalUrl: string) {
+  async generateTinyUrl(originalUrl: string, expiresIn: number) {
     if (!originalUrl) {
       this.logger.error('No original url found to get tiny url');
       throw new InternalServerErrorException('Something Went wrong!');
@@ -38,7 +39,7 @@ export class ShortenUrlService {
       //set the key and value to redis
       await this.redis.set(redisKey, originalUrl);
       //set expiry time for the key
-      await this.redis.expire(redisKey, this.config.env.REDIS_TTL);
+      await this.redis.expire(redisKey, expiresIn);
       return tinyUrl;
     } catch (error) {
       this.logger.error(error.message);
@@ -47,7 +48,7 @@ export class ShortenUrlService {
     }
   }
 
-  async getOriginalUrl(tinyUrlKey: string) {
+  async getOriginalUrlFromKey(tinyUrlKey: string) {
     if (!tinyUrlKey) {
       this.logger.error('No tiny url found');
       throw new BadRequestException('Invalid URL');
@@ -55,6 +56,25 @@ export class ShortenUrlService {
     try {
       const redisKey = this.generateKey(tinyUrlKey);
       const cachedUrl: string = await this.redis.get(redisKey);
+      if (!cachedUrl) {
+        this.logger.error('No original URL found against tiny URL');
+        throw new BadRequestException('Invalid or expired URL');
+      }
+      return cachedUrl;
+    } catch (error) {
+      this.logger.error(error.message);
+      this.logger.error('Unable to get original url from tiny url');
+      throw new BadRequestException('Invalid or expired URL');
+    }
+  }
+
+  async getCachedUrl(tinyUrl: string) {
+    if (!tinyUrl) {
+      this.logger.error('No tiny url found');
+      throw new BadRequestException('Invalid URL');
+    }
+    try {
+      const cachedUrl: string = await this.redis.get(tinyUrl);
       if (!cachedUrl) {
         this.logger.error('No original URL found against tiny URL');
         throw new BadRequestException('Invalid or expired URL');

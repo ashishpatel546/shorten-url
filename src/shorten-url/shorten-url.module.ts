@@ -16,7 +16,7 @@ import { ShortenUrlController } from './shorten-url.controller';
     //     };
     //   },
     // }),
-    RedisModule
+    RedisModule,
   ],
   controllers: [ShortenUrlController],
   providers: [ShortenUrlService],
