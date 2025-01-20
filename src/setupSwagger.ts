@@ -39,6 +39,6 @@ Routes is following REST standard`,
   });
 
   Logger.warn(
-    `Documentation: http://localhost:${process.env.SERVICE_PORT}/documentation`,
+    `Documentation: http://localhost:${process.env.SERVICE_PORT}/api`,
   );
 }
