@@ -1,8 +1,8 @@
 {
-  "name": "shorten-url",
+  "name": "url-shortner",
   "version": "0.0.1",
   "description": "",
-  "author": "",
+  "author": "Ashish Patel",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
