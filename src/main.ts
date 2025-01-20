@@ -27,11 +27,11 @@ async function bootstrap() {
   );
   app.enableCors;
   const configService = app.select(SharedModule).get(GlobalConfigService);
-  // const apiVersion = configService.env.API_VERSION;
-  // app.enableVersioning({
-  //   type: VersioningType.URI,
-  //   defaultVersion: apiVersion,
-  // });
+  const apiVersion = configService.env.API_VERSION;
+  app.enableVersioning({
+    type: VersioningType.URI,
+    defaultVersion: apiVersion,
+  });
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,

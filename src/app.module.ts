@@ -3,7 +3,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
 import { SharedModule } from './shared/shared.module';
-import { ShortenUrlModule } from './shorten-url/shorten-url.module';
+import { ShortenUrlModule } from './url-shortner/url-shorten.module';
 
 @Module({
   imports: [

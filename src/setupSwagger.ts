@@ -4,7 +4,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 export function setupSwagger(app: INestApplication) {
   const documentBuilder = new DocumentBuilder()
-    .setTitle('SHORTEN URL SERVICE REST API')
+    .setTitle('URL SHORTENING SERVICE REST API')
     .setDescription(
       `### REST
 Routes is following REST standard`,
@@ -16,7 +16,7 @@ Routes is following REST standard`,
   }
 
   if (process.env.POSTMAN_CONFIG_ENABLED == 'true') {
-    documentBuilder.setExternalDoc('Postman Collection', '/documentation-json');
+    documentBuilder.setExternalDoc('Postman Collection', '/api-json');
   }
 
   documentBuilder.addBearerAuth(
@@ -32,7 +32,7 @@ Routes is following REST standard`,
   );
 
   const document = SwaggerModule.createDocument(app, documentBuilder.build());
-  SwaggerModule.setup('documentation', app, document, {
+  SwaggerModule.setup('api', app, document, {
     swaggerOptions: {
       persistAuthorization: true,
     },

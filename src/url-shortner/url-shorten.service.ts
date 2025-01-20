@@ -1,20 +1,18 @@
-// import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import {
   BadRequestException,
   Inject,
   Injectable,
   InternalServerErrorException,
   Logger,
-  Scope,
 } from '@nestjs/common';
 // import { Cache } from 'cache-manager';
 import ShortUniqueId from 'short-unique-id';
 import Redis from 'ioredis';
-import { GlobalConfigService } from 'src/shared/config/globalConfig.service';
+import { GlobalConfigService } from '../shared/config/globalConfig.service';
 
-@Injectable({ scope: Scope.REQUEST })
-export class ShortenUrlService {
-  private logger = new Logger(ShortenUrlService.name);
+@Injectable()
+export class URLShortenService {
+  private logger = new Logger(URLShortenService.name);
 
   constructor(
     // @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
@@ -22,23 +20,37 @@ export class ShortenUrlService {
     private readonly config: GlobalConfigService,
   ) {}
 
-  async generateTinyUrl(originalUrl: string, expiresIn: number) {
-    if (!originalUrl) {
-      this.logger.error('No original url found to get tiny url');
-      throw new InternalServerErrorException('Something Went wrong!');
+  private isValidUrl(url: string): boolean {
+    try {
+      const urlObject = new URL(url.startsWith('http') ? url : `https://${url}`);
+      return urlObject.hostname.includes('.') && urlObject.hostname.length > 3;
+    } catch {
+      return false;
     }
-    // We can use a more sophisticated encoding algorithm here but for now its fine
+  }
+
+  async generateSmlink(
+    originalUrl: string,
+    expiresIn: number,
+    baseUrl: string
+  ): Promise<string> {
+    if (!originalUrl || !this.isValidUrl(originalUrl)) {
+      throw new BadRequestException('Invalid URL provided');
+    }
+
     try {
       const uid = new ShortUniqueId({ length: 10 });
       const tinyString = uid.rnd();
-      const tinyUrl = `${this.config.env.BASE_URL}/${tinyString}`;
-
-      //create redis key with some pattern
       const redisKey = this.generateKey(tinyString);
+      
+      // Check for collisions
+      const existing = await this.redis.get(redisKey);
+      if (existing) {
+        return this.generateSmlink(originalUrl, expiresIn, baseUrl); // Retry with new key
+      }
 
-      //set the key and value to redis
+      const tinyUrl = `${baseUrl}/${tinyString}`;
       await this.redis.set(redisKey, originalUrl);
-      //set expiry time for the key
       await this.redis.expire(redisKey, expiresIn);
       return tinyUrl;
     } catch (error) {
@@ -56,25 +68,6 @@ export class ShortenUrlService {
     try {
       const redisKey = this.generateKey(tinyUrlKey);
       const cachedUrl: string = await this.redis.get(redisKey);
-      if (!cachedUrl) {
-        this.logger.error('No original URL found against tiny URL');
-        throw new BadRequestException('Invalid or expired URL');
-      }
-      return cachedUrl;
-    } catch (error) {
-      this.logger.error(error.message);
-      this.logger.error('Unable to get original url from tiny url');
-      throw new BadRequestException('Invalid or expired URL');
-    }
-  }
-
-  async getCachedUrl(tinyUrl: string) {
-    if (!tinyUrl) {
-      this.logger.error('No tiny url found');
-      throw new BadRequestException('Invalid URL');
-    }
-    try {
-      const cachedUrl: string = await this.redis.get(tinyUrl);
       if (!cachedUrl) {
         this.logger.error('No original URL found against tiny URL');
         throw new BadRequestException('Invalid or expired URL');

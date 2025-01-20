@@ -1,6 +1,6 @@
 import { Provider } from '@nestjs/common';
 import Redis from 'ioredis';
-import { GlobalConfigService } from 'src/shared/config/globalConfig.service';
+import { GlobalConfigService } from '../shared/config/globalConfig.service';
 
 export const RedisProvider: Provider = {
   provide: 'REDIS_CLIENT', // Token for the Redis client
