@@ -22,9 +22,36 @@
   <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
   [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 
+# URL Shortener Service
+
+A URL shortening service built with NestJS framework.
+
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+This service provides API endpoints to create and resolve shortened URLs. It uses Redis for storing URL mappings.
+
+## Environment Variables
+
+Create a `.env` file in the root directory with the following variables:
+
+```env
+NODE_ENV=development
+SERVICE_PORT=8080
+API_VERSION=1
+POSTMAN_CONFIG_ENABLED=true
+ENABLE_DOCUMENTATION=true
+REDIS_HOST=127.0.0.1
+REDIS_PORT=6379
+REDIS_DB_INDEX=1
+SHORTEN_URL_KEY_PATTERN=shorten-url-
+REDIS_TTL=15000        # Time in seconds before URL expires
+```
+
+## Prerequisites
+
+- Node.js (v14 or higher)
+- Redis server running locally or remotely
+- npm or yarn package manager
 
 ## Installation
 
@@ -45,6 +72,42 @@ $ npm run start:dev
 $ npm run start:prod
 ```
 
+## API Endpoints
+
+### 1. Generate Short URL
+- **Endpoint**: POST `/get-smlink`
+- **Body**:
+  ```json
+  {
+    "original_url": "https://example.com/very-long-url",
+    "expires_in": 3600  // optional, defaults to REDIS_TTL
+  }
+  ```
+- **Response**:
+  ```json
+  {
+    "shortUrl": "http://your-domain/abc123"
+  }
+  ```
+
+### 2. Get Original URL
+- **Endpoint**: GET `/get-original-url/:smlink_key`
+- **Response**: Original URL string
+
+### 3. Redirect to Original URL
+- **Endpoint**: GET `/:smlink`
+- **Behavior**: Redirects to the original URL
+- **Response**: 301 Redirect
+
+### 4. Health Check
+- **Endpoint**: GET `/health-check`
+- **Response**: Service status message
+
+## Error Responses
+
+- **400**: Invalid URL or expired short link
+- **500**: Internal server error
+
 ## Test
 
 ```bash
@@ -58,16 +121,6 @@ $ npm run test:e2e
 $ npm run test:cov
 ```
 
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
 ## License
 
-Nest is [MIT licensed](LICENSE).
+This project is [MIT licensed](LICENSE).
