@@ -50,6 +50,7 @@ export class URLShortenService {
       }
 
       const tinyUrl = `${baseUrl}/${tinyString}`;
+      await this.redis.setex(redisKey, expiresIn, originalUrl)
       await this.redis.set(redisKey, originalUrl);
       await this.redis.expire(redisKey, expiresIn);
       return tinyUrl;

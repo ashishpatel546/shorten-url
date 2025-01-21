@@ -8,6 +8,7 @@ import {
   Version,
   VERSION_NEUTRAL,
   Req,
+  Header,
 } from '@nestjs/common';
 import { Request } from 'express';
 import { URLShortenService } from './url-shorten.service';
@@ -54,6 +55,10 @@ export class URLShortenController {
   @Version(VERSION_NEUTRAL)
   @Get('/:smlink')
   @Redirect()
+  @Redirect()
+  @Header('Cache-Control', 'no-cache, no-store, must-revalidate')
+  @Header('Pragma', 'no-cache')
+  @Header('Expires', '0')
   async resolveSmlink(@Param('smlink') smlink: string) {
     const originalUrl = await this.service.getOriginalUrlFromKey(smlink);
     
